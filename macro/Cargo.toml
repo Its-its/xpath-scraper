@@ -8,6 +8,7 @@ homepage = "https://github.com/Its-its/xpath-scraper"
 respository = "https://github.com/Its-its/xpath-scraper"
 readme = "README.md"
 keywords = ["xpath"]
+description = "Macros implementation of #[derive(Scraper)]"
 
 [lib]
 proc-macro = true
