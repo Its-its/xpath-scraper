@@ -4,8 +4,7 @@ use scraper_macros::*;
 use scraper::{
 	xpath,
 	ConvertFromValue,
-	ScraperMain,
-	Result
+	ScraperMain
 };
 
 
@@ -40,7 +39,7 @@ pub struct RedditListItem {
 
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let resp = reqwest::get("https://www.reddit.com/r/nocontextpics/").await?;
 	let data = resp.text().await?;
 	let document = xpath::parse_doc(&mut Cursor::new(data));
