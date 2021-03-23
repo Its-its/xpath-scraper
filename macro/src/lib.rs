@@ -2,7 +2,7 @@
 #[macro_use] extern crate quote;
 
 use proc_macro::TokenStream;
-use syn::{Attribute, Data, DeriveInput, Fields, spanned::Spanned};
+use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, spanned::Spanned};
 
 // https://doc.rust-lang.org/reference/procedural-macros.html
 
@@ -32,7 +32,8 @@ fn define_body(data: &mut Data) -> syn::__private::TokenStream2 {
 			define_fields(&mut s.fields)
 		}
 
-		a => unimplemented!("{:#?}", a)
+		Data::Enum(_) => unimplemented!("Enum"),
+		Data::Union(_) => unimplemented!("Union"),
 	}
 }
 
@@ -101,7 +102,7 @@ fn get_scrape_attr_value(name: &str, attributes: &[Attribute]) -> Option<(String
 
 
 fn parse_attr(attr: &Attribute) -> Option<(String, String)> {
-	let stream = attr.parse_args::<syn::ExprAssign>().ok()?;
+	let stream = attr.parse_args::<ExprAssign>().ok()?;
 
 	let left = if let syn::Expr::Path(value) = *stream.left {
 		value

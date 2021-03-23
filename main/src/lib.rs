@@ -2,7 +2,7 @@ mod error;
 
 pub use error::*;
 
-pub use xpath::{
+pub use xpather::{
 	self,
 	Document,
 	Node,

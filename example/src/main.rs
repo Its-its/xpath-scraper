@@ -2,7 +2,7 @@ use std::io::Cursor;
 
 use scraper_macros::*;
 use scraper_main::{
-	xpath,
+	xpather,
 	ConvertFromValue,
 	ScraperMain
 };
@@ -42,7 +42,7 @@ pub struct RedditListItem {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let resp = reqwest::get("https://www.reddit.com/r/nocontextpics/").await?;
 	let data = resp.text().await?;
-	let document = xpath::parse_doc(&mut Cursor::new(data));
+	let document = xpather::parse_doc(&mut Cursor::new(data));
 
 	let list = RedditList::scrape(&document, None)?;
 

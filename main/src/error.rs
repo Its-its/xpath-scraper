@@ -1,6 +1,6 @@
 use thiserror::Error as ThisError;
 
-use xpath::{Error as XpathError, Value};
+use xpather::{Error as XpathError, Value};
 
 use std::io::Error as IoError;
 

@@ -13,4 +13,4 @@ keywords = ["xpath"]
 anyhow = "1.0.38"
 thiserror = "1.0.24"
 
-xpath = { git = "https://github.com/Its-its/rust-xpath.git", branch = "main", version = "0.1.4" }
+xpather = "0.1.4"

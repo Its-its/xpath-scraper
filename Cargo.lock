@@ -884,7 +884,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "thiserror",
- "xpath",
+ "xpather",
 ]
 
 [[package]]
@@ -918,9 +918,9 @@ checksum = "bd761ff957cb2a45fbb9ab3da6512de9de55872866160b23c25f1a841e99d29f"
 
 [[package]]
 name = "serde_derive"
-version = "1.0.124"
+version = "1.0.125"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1800f7693e94e186f5e25a28291ae1570da908aff7d97a095dec1e56ff99069b"
+checksum = "b093b7a2bb58203b5da3056c05b4ec1fed827dcfdb37347a8841695263b3d06d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -961,9 +961,9 @@ dependencies = [
 
 [[package]]
 name = "siphasher"
-version = "0.3.3"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa8f3741c7372e75519bd9346068370c9cdaabcc1f9599cbcf2a2719352286b7"
+checksum = "cbce6d4507c7e4a3962091436e56e95290cb71fa302d0d270e32130b75fbff27"
 
 [[package]]
 name = "slab"
@@ -1373,9 +1373,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "xpath"
+name = "xpather"
 version = "0.1.4"
-source = "git+https://github.com/Its-its/rust-xpath.git?branch=main#f94a00b3f2a87771dbba7cea37ab15e4c1694000"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64dfe0de9b23615861c59384b27cc4feb52c22939f45b890e90fc364f6915e62"
 dependencies = [
  "html5ever",
  "markup5ever",
