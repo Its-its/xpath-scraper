@@ -6,12 +6,19 @@ use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, spanned::Spanned};
 
 // https://doc.rust-lang.org/reference/procedural-macros.html
 
-
+/// The macro which converts a struct or tuple into one which is able to be scraped easily.
+///
+/// An example of this would be here:
+/// ```rust
+/// #[derive(Scraper)]
+/// pub struct RedditListItem {
+///     #[scrape(xpath = r#"//a[@data-click-id="body"]/@href"#)]
+///     pub urls: Vec<String>
+/// }
+/// ```
 #[proc_macro_derive(Scraper, attributes(scrape))]
 pub fn derive_scraper(input: TokenStream) -> TokenStream {
 	let mut input = parse_macro_input!(input as DeriveInput);
-
-	// println!("item: {:#?}", input);
 
 	let body = define_body(&mut input.data);
 

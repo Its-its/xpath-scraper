@@ -9,11 +9,27 @@ pub use xpather::{
 	Value
 };
 
-
+/// Used to scrape data for a struct.
+///
+/// An example of this would be here:
+/// ```rust
+/// pub struct RedditListItem {
+///     pub url: String
+/// }
+///
+/// impl ScraperMain for RedditListItem {
+///     fn scrape(doc: &Document, container: Option<Node>) -> Result<Self> {
+///        Ok(Self {
+///             url: evaluate(".//a[@data-click-id=\"body\"]/@href", doc, container).convert_from(doc)?
+///         })
+///     }
+/// }
+/// ```
 pub trait ScraperMain: Sized {
 	fn scrape(doc: &Document, container: Option<Node>) -> Result<Self>;
 }
 
+/// A simple document evaluation fn. Mainly defined for macros. Allows for evaluating from the Document for from the Node in the document.
 pub fn evaluate<S: Into<String>>(search: S, doc: &Document, container: Option<Node>) -> Option<Value> {
 	if let Some(node) = container {
 		doc.evaluate_from(search, node)
@@ -22,6 +38,7 @@ pub fn evaluate<S: Into<String>>(search: S, doc: &Document, container: Option<No
 	}
 }
 
+/// Allows for Conversion from `Option<Value>` into another.
 pub trait ConvertFromValue<T>: Sized {
 	fn convert_from(self, doc: &Document) -> Result<T>;
 }
@@ -66,7 +83,7 @@ impl<T> ConvertFromValue<Vec<T>> for Option<Value> where T: ScraperMain {
 	}
 }
 
-
+/// Convert Value to an Optional String.
 pub fn value_to_string(value: &Value) -> Option<String> {
 	match value {
 		Value::Nodeset(set) => {
@@ -80,6 +97,7 @@ pub fn value_to_string(value: &Value) -> Option<String> {
 	}
 }
 
+/// Convert Value to a Vec of Strings.
 pub fn value_to_string_vec(value: Value) -> Vec<String> {
 	match value {
 		Value::Nodeset(set) => {
