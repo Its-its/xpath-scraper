@@ -18,8 +18,8 @@ pub fn derive_scraper(input: TokenStream) -> TokenStream {
 	let name = input.ident;
 
 	TokenStream::from(quote! {
-		impl scraper::ScraperMain for #name {
-			fn scrape(doc: &scraper::Document, container: Option<scraper::Node>) -> scraper::Result<Self> {
+		impl scraper_main::ScraperMain for #name {
+			fn scrape(doc: &scraper_main::Document, container: Option<scraper_main::Node>) -> scraper_main::Result<Self> {
 				Ok(#body)
 			}
 		}
@@ -46,7 +46,7 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 
 				let field_span = field.span();
 				quote_spanned! {field_span=>
-					#name: scraper::evaluate(#xpath, doc, container.clone()).convert_from(doc)?
+					#name: scraper_main::evaluate(#xpath, doc, container.clone()).convert_from(doc)?
 				}
 			}).collect::<Vec<_>>();
 
@@ -64,7 +64,7 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 
 				let field_span = field.span();
 				quote_spanned! {field_span=>
-					scraper::evaluate(#xpath, doc, container.clone()).convert_from(doc)?
+					scraper_main::evaluate(#xpath, doc, container.clone()).convert_from(doc)?
 				}
 			}).collect::<Vec<_>>();
 

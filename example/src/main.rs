@@ -1,7 +1,7 @@
 use std::io::Cursor;
 
 use scraper_macros::*;
-use scraper::{
+use scraper_main::{
 	xpath,
 	ConvertFromValue,
 	ScraperMain

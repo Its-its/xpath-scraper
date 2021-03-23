@@ -4,6 +4,6 @@
 [workspace]
 members = [
 	"example",
-	"scraper",
+	"main",
 	"macro"
 ]
