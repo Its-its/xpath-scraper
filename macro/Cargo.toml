@@ -14,5 +14,5 @@ description = "Macros implementation of #[derive(Scraper)]"
 proc-macro = true
 
 [dependencies]
-syn = "1.0.64"
-quote = "1.0.9"
+syn = { features = ["full"], version = "1.0" }
+quote = "1.0"

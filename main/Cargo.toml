@@ -11,7 +11,7 @@ keywords = ["xpath"]
 description = "The core framework xpath parsing"
 
 [dependencies]
-anyhow = "1.0.38"
-thiserror = "1.0.24"
+anyhow = "1.0"
+thiserror = "1.0"
 
-xpather = "0.1.4"
+xpather = "0.1"
