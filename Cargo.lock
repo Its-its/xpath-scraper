@@ -1375,7 +1375,7 @@ dependencies = [
 [[package]]
 name = "xpath"
 version = "0.1.4"
-source = "git+http://192.168.1.50:3000/Its/rust-xpath.git#f94a00b3f2a87771dbba7cea37ab15e4c1694000"
+source = "git+https://github.com/Its-its/rust-xpath.git?branch=main#f94a00b3f2a87771dbba7cea37ab15e4c1694000"
 dependencies = [
  "html5ever",
  "markup5ever",
