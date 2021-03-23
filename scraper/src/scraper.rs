@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use xpath::{Document, Node, Value};
+use xpath::{Document, Node};
 
 use crate::{value_to_string, Error, ListItem, ListRequest, PageItem, Result, Scraper, TestError};
 
@@ -66,7 +66,7 @@ impl Scraper {
 								thumbnail: node_path_to_string(&xpath_req.thumbnail_path, &node, &page_doc)?.map(|url| self.fix_url(url)),
 								next_page_url: xpath_req.next_page_path.as_deref()
 									.and_then(|xpath| page_doc.evaluate(xpath))
-									.and_then(value_to_string)
+									.and_then(|v| value_to_string(&v))
 									.map(|url| self.fix_url(url))
 							});
 						}
@@ -155,12 +155,12 @@ fn node_path_to_string(path: &Option<String>, node: &Node, page_doc: &Document) 
 	Ok(path.as_deref()
 	.map(|xpath| node.evaluate_from(xpath, page_doc).ok_or_else(|| Error::from(TestError::UnableToFindContainerItem)))
 	.transpose()?
-	.and_then(value_to_string))
+	.and_then(|v| value_to_string(&v)))
 }
 
 fn path_to_string(path: &Option<String>, page_doc: &Document) -> Result<Option<String>> {
 	Ok(path.as_deref()
 	.map(|xpath| page_doc.evaluate(xpath).ok_or_else(|| Error::from(TestError::UnableToFindContainerItem)))
 	.transpose()?
-	.and_then(value_to_string))
+	.and_then(|v| value_to_string(&v)))
 }

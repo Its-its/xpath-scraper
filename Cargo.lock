@@ -960,19 +960,10 @@ dependencies = [
 name = "scraper-example"
 version = "0.1.0"
 dependencies = [
- "anyhow",
- "mime",
- "regex",
  "reqwest",
- "rust-crypto",
  "scraper",
  "scraper-macros",
- "serde",
- "serde_derive",
- "serde_json",
- "thiserror",
  "tokio",
- "url",
 ]
 
 [[package]]
@@ -1472,8 +1463,8 @@ dependencies = [
 
 [[package]]
 name = "xpath"
-version = "0.1.1"
-source = "git+http://192.168.1.50:3000/Its/rust-xpath.git#0fd2625f7d7d293f1a7461614a6865bedc0d73c2"
+version = "0.1.4"
+source = "git+http://192.168.1.50:3000/Its/rust-xpath.git#f94a00b3f2a87771dbba7cea37ab15e4c1694000"
 dependencies = [
  "html5ever",
  "markup5ever",

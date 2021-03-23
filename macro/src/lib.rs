@@ -7,24 +7,6 @@ use syn::{Attribute, Data, DeriveInput, Fields, spanned::Spanned};
 // https://doc.rust-lang.org/reference/procedural-macros.html
 
 
-// #[proc_macro_attribute]
-// pub fn scraper_main(attr: TokenStream, input: TokenStream) -> TokenStream {
-// 	let mut input = parse_macro_input!(input as DeriveInput);
-
-// 	println!("attr: \"{}\"", attr.to_string());
-// 	println!("item: {:#?}", input);
-
-// 	let name = input.ident;
-
-// 	TokenStream::from(quote! {
-// 		impl ScraperMain for #name {
-// 			fn scrape(&mut self, url: &str) -> Result<()> {
-// 				Ok(())
-// 			}
-// 		}
-// 	})
-// }
-
 #[proc_macro_derive(Scraper, attributes(scrape))]
 pub fn derive_scraper(input: TokenStream) -> TokenStream {
 	let mut input = parse_macro_input!(input as DeriveInput);
@@ -39,7 +21,6 @@ pub fn derive_scraper(input: TokenStream) -> TokenStream {
 		impl scraper::ScraperMain for #name {
 			fn scrape(doc: &scraper::Document, container: Option<scraper::Node>) -> scraper::Result<Self> {
 				Ok(#body)
-				// Ok(unimplemented!())
 			}
 		}
 	})
@@ -77,11 +58,25 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 			}
 		}
 
-		// Fields::Unnamed(field) => {}
+		Fields::Unnamed(fields) => {
+			let recurse = fields.unnamed.iter().map(|field| {
+				let xpath = get_xpath(&field.attrs).expect("Missing XPATH");
 
-		// Fields::Unit => {}
+				let field_span = field.span();
+				quote_spanned! {field_span=>
+					scraper::evaluate(#xpath, doc, container.clone()).convert_from(doc)?
+				}
+			}).collect::<Vec<_>>();
 
-		a => unimplemented!("{:#?}", a)
+			quote! {
+				#[allow(clippy::redundant_clone)]
+				Self(
+					#(#recurse),*
+				)
+			}
+		}
+
+		Fields::Unit => unimplemented!("Unimplemented Field")
 	}
 }
 

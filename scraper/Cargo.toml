@@ -15,7 +15,7 @@ thiserror = "1.0.24"
 
 tokio = { version = "1.3.0", features = ["full"] }
 
-xpath = { git = "http://192.168.1.50:3000/Its/rust-xpath.git", version = "0.1.1" }
+xpath = { git = "http://192.168.1.50:3000/Its/rust-xpath.git", version = "0.1.4" }
 # ffmpeg-next = "4.3.8"
 regex = "1.4.5"
 url = "2.2.1"

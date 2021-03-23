@@ -4,7 +4,7 @@ use mime::FromStrError as MimeConvertError;
 use url::ParseError as UrlParseError;
 use reqwest::Error as ReqwestError;
 use reqwest::header::ToStrError as HeaderToStrError;
-use xpath::Error as XpathError;
+use xpath::{Error as XpathError, Value};
 use regex::Error as RegexError;
 
 use std::io::Error as IoError;
@@ -47,7 +47,7 @@ pub enum Error {
 	ProcessDataResultMissing,
 
 	#[error("Can't convert from Value")]
-	ConvertFromValue
+	ConvertFromValue(Option<Value>)
 }
 
 #[derive(ThisError, Debug)]

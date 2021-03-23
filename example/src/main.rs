@@ -5,42 +5,37 @@ use scraper::{
 	xpath,
 	ConvertFromValue,
 	ScraperMain,
-	Result,
-	// Scraper,
-	// DownloadType,
-	// ListRequest,
-	// PageScraper,
-	// UrlParser,
-	// ListRequestXpath,
-	// RequestUrl
+	Result
 };
 
+
 #[derive(Debug, Scraper)]
-pub struct RedditList {
+pub struct RedditList(
 	#[scrape(xpath = r#"//div[contains(@class, "Post") and not(contains(@class, "promotedlink"))]"#)]
-	list: Vec<RedditListItem>
-}
+	Vec<RedditListItem>
+);
 
 
 #[derive(Debug, Scraper)]
 pub struct RedditListItem {
 	#[scrape(xpath = r#".//a[@data-click-id="body"]/@href"#)]
-	pub url: String,
+	pub url: Option<String>,
 
 	#[scrape(xpath = r#".//a[@data-click-id="body"]/div/h3/text()"#)]
-	pub title: String,
+	pub title: Option<String>,
 
 	#[scrape(xpath = r#".//a[@data-click-id="timestamp"]/text()"#)]
-	pub timestamp: String,
+	pub timestamp: Option<String>,
 
-	#[scrape(xpath = r#".//div[@data-click-id="image"]/../@href"#)]
-	pub thumb: String,
+	// xpath not working.
+	#[scrape(xpath = r#".//div[@data-click-id="background"]/div/div[1]/div/div/a/@href"#)]
+	pub thumb: Option<String>,
 
 	#[scrape(xpath = r#".//a[@data-click-id="comments"]/span/text()"#)]
-	pub comment_count: String,
+	pub comment_count: Option<String>,
 
-	#[scrape(xpath = r#".//button[@data-click-id="upvote"]/../div/text()"#)]
-	pub votes: String,
+	#[scrape(xpath = r#"./div[1]/div/div/text()"#)]
+	pub votes: Option<String>,
 }
 
 
