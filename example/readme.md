@@ -1,6 +1,15 @@
 # Reddit Code Example:
 Scrapes the [/r/nocontextpics](https://www.reddit.com/r/nocontextpics/) subreddit.
 
+## Running the example:
+```sh
+git pull https://github.com/Its-its/xpath-scraper
+
+cd example
+
+cargo run
+```
+
 ## Example Output:
 ```rust
 RedditList([

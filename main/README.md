@@ -1,0 +1,59 @@
+# XPATH Scraper
+
+Makes it easier to scrape websites with XPATH. Currently using [my xpath parser](https://github.com/Its-its/rust-xpath) which is incomplete, undocumented and used originally for teaching myself about parsing.
+
+A Very simple example of this which is below and also in the [example](/example) folder:
+```rust
+use std::io::Cursor;
+
+use scraper_macros::Scraper;
+use scraper_main::{
+	xpather,
+	ConvertFromValue,
+	ScraperMain
+};
+
+#[derive(Debug, Scraper)]
+pub struct RedditList(
+	#[scrape(xpath = r#"//div[contains(@class, "Post") and not(contains(@class, "promotedlink"))]"#)]
+	Vec<String>
+);
+
+
+#[derive(Debug, Scraper)]
+pub struct RedditListItem {
+	#[scrape(xpath = r#".//a[@data-click-id="body"]/@href"#)]
+	pub url: Option<String>,
+
+	#[scrape(xpath = r#".//a[@data-click-id="body"]/div/h3/text()"#)]
+	pub title: Option<String>,
+
+	#[scrape(xpath = r#".//a[@data-click-id="timestamp"]/text()"#)]
+	pub timestamp: Option<String>,
+
+	#[scrape(xpath = r#".//a[@data-click-id="comments"]/span/text()"#)]
+	pub comment_count: Option<String>,
+
+	#[scrape(xpath = r#"./div[1]/div/div/text()"#)]
+	pub votes: Option<String>,
+}
+
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+	// Request subreddit
+	let resp = reqwest::get("https://www.reddit.com/r/nocontextpics/").await?;
+	let data = resp.text().await?;
+
+	// Parse request into a Document.
+	let document = xpather::parse_doc(&mut Cursor::new(data));
+
+	// Scrape RedditList struct.
+	let list = RedditList::scrape(&document, None)?;
+
+	// Output the scraped.
+	println!("{:#?}", list);
+
+	Ok(())
+}
+```
