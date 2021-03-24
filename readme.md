@@ -16,7 +16,7 @@ use scraper_main::{
 #[derive(Debug, Scraper)]
 pub struct RedditList(
 	#[scrape(xpath = r#"//div[contains(@class, "Post") and not(contains(@class, "promotedlink"))]"#)]
-	Vec<String>
+	Vec<RedditListItem>
 );
 
 
