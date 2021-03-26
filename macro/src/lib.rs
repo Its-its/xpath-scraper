@@ -2,6 +2,7 @@
 #[macro_use] extern crate quote;
 
 use proc_macro::TokenStream;
+use quote::__private::Span;
 use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, spanned::Spanned};
 
 // https://doc.rust-lang.org/reference/procedural-macros.html
@@ -50,11 +51,12 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 			let recurse = fields.named.iter().map(|field| {
 				let name = &field.ident;
 
-				let xpath = get_xpath(&field.attrs).expect("Missing XPATH");
+				let scrape = Scrape::new(field.span(), &field.attrs);
 
-				let field_span = field.span();
-				quote_spanned! {field_span=>
-					#name: scraper_main::evaluate(#xpath, doc, container.clone()).convert_from(doc)?
+				let eval = scrape.generate_evaluation();
+
+				quote! {
+					#name: #eval
 				}
 			}).collect::<Vec<_>>();
 
@@ -67,14 +69,9 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 		}
 
 		Fields::Unnamed(fields) => {
-			let recurse = fields.unnamed.iter().map(|field| {
-				let xpath = get_xpath(&field.attrs).expect("Missing XPATH");
-
-				let field_span = field.span();
-				quote_spanned! {field_span=>
-					scraper_main::evaluate(#xpath, doc, container.clone()).convert_from(doc)?
-				}
-			}).collect::<Vec<_>>();
+			let recurse = fields.unnamed.iter()
+				.map(|field| Scrape::new(field.span(), &field.attrs).generate_evaluation())
+				.collect::<Vec<_>>();
 
 			quote! {
 				#[allow(clippy::redundant_clone)]
@@ -89,17 +86,48 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 }
 
 
-fn get_xpath(attributes: &[Attribute]) -> Option<String> {
-	get_scrape_attr_value("xpath", attributes).map(|(_, v)| v)
+struct Scrape {
+	span: Span,
+
+	xpath: String,
+	transform_fn: Option<String>
 }
 
-fn get_scrape_attr_value(name: &str, attributes: &[Attribute]) -> Option<(String, String)> {
+impl Scrape {
+	pub fn new(span: Span, attributes: &[Attribute]) -> Self {
+		Self {
+			span,
+			xpath: get_scrape_attr_value("xpath", attributes).expect("Missing #[scrape(xpath = \"\")] macro"),
+			transform_fn: get_scrape_attr_value("transform", attributes)
+		}
+	}
+
+	pub fn generate_evaluation(self) -> syn::__private::TokenStream2 {
+		let xpath = self.xpath;
+		let span = self.span;
+
+		if let Some(transform_fn) = self.transform_fn {
+			let transform_ident = format_ident!("{}", transform_fn);
+
+			quote_spanned! {span=>
+				#transform_ident(scraper_main::evaluate(#xpath, doc, container.clone()).convert_from(doc)?)
+			}
+		} else {
+			quote_spanned! {span=>
+				scraper_main::evaluate(#xpath, doc, container.clone()).convert_from(doc)?
+			}
+		}
+	}
+}
+
+
+fn get_scrape_attr_value(name: &str, attributes: &[Attribute]) -> Option<String> {
 	for attr in attributes {
 		if attr.path.get_ident()? == "scrape" {
 			let parsed = parse_attr(attr)?;
 
 			if parsed.0 == name {
-				return Some(parsed);
+				return Some(parsed.1);
 			}
 		}
 	}

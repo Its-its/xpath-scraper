@@ -20,10 +20,19 @@ pub struct RedditList(
 );
 
 
+// Transform received "/r/.." into "https://reddit.com/r/.."
+fn url_transform(received: Option<String>) -> Option<String> {
+	received.map(|mut url| {
+		url.insert_str(0, "https://reddit.com");
+		url
+	})
+}
+
 #[derive(Debug, Scraper)]
 pub struct RedditListItem {
 	// URL of the post
 	#[scrape(xpath = r#".//a[@data-click-id="body"]/@href"#)]
+	#[scrape(transform = "url_transform")]
 	pub url: Option<String>,
 
 	// Title of the post
