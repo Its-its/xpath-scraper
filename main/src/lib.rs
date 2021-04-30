@@ -29,71 +29,60 @@ pub trait ScraperMain: Sized {
 	fn scrape(doc: &Document, container: Option<Node>) -> Result<Self>;
 }
 
-/// A simple document evaluation fn. Mainly defined for macros. Allows for evaluating from the Document for from the Node in the document.
-pub fn evaluate<S: Into<String>>(search: S, doc: &Document, container: Option<Node>) -> Option<Value> {
-	if let Some(node) = container {
-		doc.evaluate_from(search, node)
+/// A simple document evaluation fn.
+/// Mainly defined for macros.
+/// Allows for evaluating from the Document for from the Node in the document.
+pub fn evaluate<S: Into<String>>(search: S, doc: &Document, container: Option<Node>) -> Result<Value> {
+	Ok(if let Some(node) = container {
+		doc.evaluate_from(search, node)?
 	} else {
-		doc.evaluate(search)
-	}
+		doc.evaluate(search)?
+	})
 }
 
+// TODO: Rename to ConvertToValue
 /// Allows for Conversion from `Option<Value>` into another.
 pub trait ConvertFromValue<T>: Sized {
 	fn convert_from(self, doc: &Document) -> Result<T>;
 }
 
-impl ConvertFromValue<Option<String>> for Option<Value> {
+impl ConvertFromValue<Option<String>> for Result<Value> {
 	fn convert_from(self, _: &Document) -> Result<Option<String>> {
-		Ok(if let Some(value) = self {
-			value_to_string(&value)
-		} else {
-			None
-		})
+		Ok(value_to_string(self?).ok())
 	}
 }
 
-impl ConvertFromValue<String> for Option<Value> {
+impl ConvertFromValue<String> for Result<Value> {
 	fn convert_from(self, _: &Document) -> Result<String> {
-		Ok(if let Some(value) = self {
-			value_to_string(&value).ok_or(Error::ConvertFromValue(Some(value)))?
-		} else {
-			return Err(Error::ConvertFromValue(None));
-		})
+		value_to_string(self?)
 	}
 }
 
-impl ConvertFromValue<Vec<String>> for Option<Value> {
+impl ConvertFromValue<Vec<String>> for Result<Value> {
 	fn convert_from(self, _: &Document) -> Result<Vec<String>> {
-		Ok(if let Some(value) = self {
-			value_to_string_vec(value)
-		} else {
-			Vec::new()
-		})
+		Ok(value_to_string_vec(self?))
 	}
 }
 
-impl<T> ConvertFromValue<Vec<T>> for Option<Value> where T: ScraperMain {
+impl<T> ConvertFromValue<Vec<T>> for Result<Value> where T: ScraperMain {
 	fn convert_from(self, doc: &Document) -> Result<Vec<T>> {
-		Ok(if let Some(value) = self.map(|v| v.into_iterset()).transpose()? {
-			value.map(|n| T::scrape(doc, Some(n))).collect::<Result<Vec<_>>>()?
-		} else {
-			Vec::new()
-		})
+		let value = self?.into_iterset()?;
+		Ok(value.map(|n| T::scrape(doc, Some(n))).collect::<Result<Vec<_>>>()?)
 	}
 }
 
 /// Convert Value to an Optional String.
-pub fn value_to_string(value: &Value) -> Option<String> {
+pub fn value_to_string(value: Value) -> Result<String> {
 	match value {
 		Value::Nodeset(set) => {
 			set.nodes.first()
-			.and_then(|n| value_to_string(&n.value()))
+			.ok_or(Error::ConvertFromValue(None))
+			.and_then(|n| value_to_string(n.value()?))
 		}
 
-		Value::String(v) => Some(v.clone()),
+		Value::String(v) => Ok(v),
 
-		_ => None
+		value => Err(Error::ConvertFromValue(Some(value)))
 	}
 }
 
@@ -101,7 +90,9 @@ pub fn value_to_string(value: &Value) -> Option<String> {
 pub fn value_to_string_vec(value: Value) -> Vec<String> {
 	match value {
 		Value::Nodeset(set) => {
-			set.nodes.into_iter().filter_map(|n| value_to_string(&n.value())).collect()
+			set.nodes.into_iter()
+				.filter_map(|n| value_to_string(n.value().ok()?).ok())
+				.collect()
 		}
 
 		Value::String(v) => vec![v],
