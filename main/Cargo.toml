@@ -14,4 +14,4 @@ description = "The core framework xpath parsing"
 anyhow = "1.0"
 thiserror = "1.0"
 
-xpather = "0.2.0"
+xpather = "0.2"
