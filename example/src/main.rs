@@ -15,6 +15,7 @@ use scraper_main::{
 // Structure which is used to be able to scrape data from reddit.
 #[derive(Debug, Scraper)]
 pub struct RedditList(
+	// Uses XPATH to find the item containers
 	#[scrape(xpath = r#"//div[contains(@class, "Post") and not(contains(@class, "promotedlink"))]"#)]
 	Vec<RedditListItem>
 );
@@ -61,6 +62,8 @@ pub struct RedditListItem {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Request subreddit
 	let resp = reqwest::get("https://www.reddit.com/r/nocontextpics/").await?;
+
+	// Return page data.
 	let data = resp.text().await?;
 
 	// Parse request into a Document.

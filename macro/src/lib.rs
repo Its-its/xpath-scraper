@@ -1,3 +1,14 @@
+//! The macro which converts a struct or tuple into one which is able to be scraped easily.
+//!
+//! An example of this would be here:
+//! ```rust
+//! #[derive(Scraper)]
+//! pub struct RedditListItem {
+//!     #[scrape(xpath = r#"//a[@data-click-id="body"]/@href"#)]
+//!     pub urls: Vec<String>
+//! }
+//! ```
+
 #[macro_use] extern crate syn;
 #[macro_use] extern crate quote;
 

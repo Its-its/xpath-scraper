@@ -15,6 +15,7 @@ use scraper_main::{
 
 #[derive(Debug, Scraper)]
 pub struct RedditList(
+	// Uses XPATH to find the item containers
 	#[scrape(xpath = r#"//div[contains(@class, "Post") and not(contains(@class, "promotedlink"))]"#)]
 	Vec<RedditListItem>
 );
@@ -22,18 +23,23 @@ pub struct RedditList(
 
 #[derive(Debug, Scraper)]
 pub struct RedditListItem {
+	// URL of the post
 	#[scrape(xpath = r#".//a[@data-click-id="body"]/@href"#)]
 	pub url: Option<String>,
 
+	// Title of the post
 	#[scrape(xpath = r#".//a[@data-click-id="body"]/div/h3/text()"#)]
 	pub title: Option<String>,
 
+	// When it was posted
 	#[scrape(xpath = r#".//a[@data-click-id="timestamp"]/text()"#)]
 	pub timestamp: Option<String>,
 
+	// Amount of comments.
 	#[scrape(xpath = r#".//a[@data-click-id="comments"]/span/text()"#)]
 	pub comment_count: Option<String>,
 
+	// Vote count.
 	#[scrape(xpath = r#"./div[1]/div/div/text()"#)]
 	pub votes: Option<String>,
 }
@@ -43,6 +49,8 @@ pub struct RedditListItem {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Request subreddit
 	let resp = reqwest::get("https://www.reddit.com/r/nocontextpics/").await?;
+
+	// Return page data.
 	let data = resp.text().await?;
 
 	// Parse request into a Document.
