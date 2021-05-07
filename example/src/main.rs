@@ -8,7 +8,7 @@ use std::io::Cursor;
 use scraper_macros::Scraper;
 use scraper_main::{
 	xpather,
-	ConvertFromValue,
+	ConvertToValue,
 	ScraperMain
 };
 

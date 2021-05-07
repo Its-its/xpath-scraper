@@ -29,11 +29,11 @@ pub trait ScraperMain: Sized {
 	fn scrape(doc: &Document, container: Option<Node>) -> Result<Self>;
 }
 
-/// A simple `Document` evaluation fn.
+/// A simple [Document] evaluation fn.
 ///
 /// Mainly defined for macros.
 ///
-/// Allows for evaluating from the start of the Document or from a Node in the Document.
+/// Allows for evaluating from the start of the [Document] or from a [Node] in the Document.
 pub fn evaluate<S: Into<String>>(search: S, doc: &Document, container: Option<Node>) -> Result<Value> {
 	Ok(if let Some(node) = container {
 		doc.evaluate_from(search, node)?
@@ -42,38 +42,37 @@ pub fn evaluate<S: Into<String>>(search: S, doc: &Document, container: Option<No
 	})
 }
 
-// TODO: Rename to ConvertToValue
-/// Allows for Conversion from `Option<Value>` into another.
-pub trait ConvertFromValue<T>: Sized {
+/// Allows for Conversion from [Option]<[Value]> into another.
+pub trait ConvertToValue<T>: Sized {
 	fn convert_from(self, doc: &Document) -> Result<T>;
 }
 
-impl ConvertFromValue<Option<String>> for Result<Value> {
+impl ConvertToValue<Option<String>> for Result<Value> {
 	fn convert_from(self, _: &Document) -> Result<Option<String>> {
 		Ok(value_to_string(self?).ok())
 	}
 }
 
-impl ConvertFromValue<String> for Result<Value> {
+impl ConvertToValue<String> for Result<Value> {
 	fn convert_from(self, _: &Document) -> Result<String> {
 		value_to_string(self?)
 	}
 }
 
-impl ConvertFromValue<Vec<String>> for Result<Value> {
+impl ConvertToValue<Vec<String>> for Result<Value> {
 	fn convert_from(self, _: &Document) -> Result<Vec<String>> {
 		Ok(value_to_string_vec(self?))
 	}
 }
 
-impl<T> ConvertFromValue<Vec<T>> for Result<Value> where T: ScraperMain {
+impl<T> ConvertToValue<Vec<T>> for Result<Value> where T: ScraperMain {
 	fn convert_from(self, doc: &Document) -> Result<Vec<T>> {
 		let value = self?.into_iterset()?;
 		Ok(value.map(|n| T::scrape(doc, Some(n))).collect::<Result<Vec<_>>>()?)
 	}
 }
 
-/// Converts `Value` to an `Result`<`String`>.
+/// Converts [Value] to an [Result]<[String]>.
 pub fn value_to_string(value: Value) -> Result<String> {
 	match value {
 		Value::Nodeset(set) => {
@@ -88,7 +87,7 @@ pub fn value_to_string(value: Value) -> Result<String> {
 	}
 }
 
-/// Converts `Value` to `Vec`<`String`>.
+/// Converts [Value] to [Vec]<[String]>.
 pub fn value_to_string_vec(value: Value) -> Vec<String> {
 	match value {
 		Value::Nodeset(set) => {
