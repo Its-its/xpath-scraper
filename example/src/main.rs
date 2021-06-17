@@ -55,6 +55,9 @@ pub struct RedditListItem {
 	// Vote count.
 	#[scrape(xpath = r#"./div[1]/div/div/text()"#)]
 	pub votes: Option<String>,
+
+	#[scrape(ignore)]
+	pub this_doesnt_do_anything: Option<String>
 }
 
 

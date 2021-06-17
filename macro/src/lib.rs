@@ -14,7 +14,7 @@
 
 use proc_macro::TokenStream;
 use quote::__private::Span;
-use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, spanned::Spanned};
+use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, Meta, NestedMeta, spanned::Spanned};
 
 // https://doc.rust-lang.org/reference/procedural-macros.html
 
@@ -71,8 +71,10 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 				}
 			}).collect::<Vec<_>>();
 
+			// TODO: Remove allows
+
 			quote! {
-				#[allow(clippy::redundant_clone)]
+				#[allow(clippy::redundant_clone, clippy::default_trait_access)]
 				Self {
 					#(#recurse),*
 				}
@@ -85,7 +87,7 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 				.collect::<Vec<_>>();
 
 			quote! {
-				#[allow(clippy::redundant_clone)]
+				#[allow(clippy::redundant_clone, clippy::default_trait_access)]
 				Self(
 					#(#recurse),*
 				)
@@ -100,7 +102,9 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 struct Scrape {
 	span: Span,
 
-	xpath: String,
+	is_ignored: bool,
+
+	xpath: Option<String>,
 	transform_fn: Option<String>
 }
 
@@ -108,24 +112,31 @@ impl Scrape {
 	pub fn new(span: Span, attributes: &[Attribute]) -> Self {
 		Self {
 			span,
-			xpath: get_scrape_attr_value("xpath", attributes).expect("Missing #[scrape(xpath = \"\")] macro"),
+			is_ignored: does_attribute_exist("ignore", attributes),
+			xpath: get_scrape_attr_value("xpath", attributes),
 			transform_fn: get_scrape_attr_value("transform", attributes)
 		}
 	}
 
 	pub fn generate_evaluation(self) -> syn::__private::TokenStream2 {
-		let xpath = self.xpath;
-		let span = self.span;
-
-		if let Some(transform_fn) = self.transform_fn {
-			let transform_ident = format_ident!("{}", transform_fn);
-
-			quote_spanned! {span=>
-				#transform_ident(::scraper_main::evaluate(#xpath, doc, container).convert_from(doc)?)
+		if self.is_ignored {
+			quote! {
+				Default::default()
 			}
 		} else {
-			quote_spanned! {span=>
-				::scraper_main::evaluate(#xpath, doc, container).convert_from(doc)?
+			let xpath = self.xpath.expect("Expected #[scrape(xpath = \"\")] macro");
+			let span = self.span;
+
+			if let Some(transform_fn) = self.transform_fn {
+				let transform_ident = format_ident!("{}", transform_fn);
+
+				quote_spanned! {span=>
+					#transform_ident(::scraper_main::evaluate(#xpath, doc, container).convert_from(doc)?)
+				}
+			} else {
+				quote_spanned! {span=>
+					::scraper_main::evaluate(#xpath, doc, container).convert_from(doc)?
+				}
 			}
 		}
 	}
@@ -144,6 +155,20 @@ fn get_scrape_attr_value(name: &str, attributes: &[Attribute]) -> Option<String>
 	}
 
 	None
+}
+
+fn does_attribute_exist(name: &str, attributes: &[Attribute]) -> bool {
+	for attr in attributes {
+		if attr.path.get_ident().map(|v| v == "scrape").unwrap_or_default() {
+			let parsed = parse_attr_name(attr);
+
+			if parsed.as_deref() == Some(name) {
+				return true;
+			}
+		}
+	}
+
+	false
 }
 
 
@@ -169,4 +194,20 @@ fn parse_attr(attr: &Attribute) -> Option<(String, String)> {
 	};
 
 	Some((left.path.get_ident()?.to_string(), right_value))
+}
+
+fn parse_attr_name(attr: &Attribute) -> Option<String> {
+	// TODO: Actually use parse_meta() for all attributes instead of just this one.
+
+	let parse = attr.parse_meta().expect("--------------------------------------------");
+
+	if let Meta::List(val) = parse {
+		let ret: Vec<NestedMeta> = val.nested.into_iter().collect();
+
+		if let NestedMeta::Meta(Meta::Path(path)) = ret.first()? {
+			return Some(path.get_ident()?.to_string());
+		}
+	}
+
+	None
 }
