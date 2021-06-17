@@ -48,6 +48,7 @@ pub trait ConvertToValue<T>: Sized {
 	fn convert_from(self, doc: &Document) -> Result<T>;
 }
 
+
 impl<'a> ConvertToValue<Option<String>> for Result<ProduceIter<'a>> {
 	fn convert_from(self, _: &Document) -> Result<Option<String>> {
 		self?.next().map(value_to_string).transpose()
@@ -69,10 +70,17 @@ impl<'a> ConvertToValue<Vec<String>> for Result<ProduceIter<'a>> {
 	}
 }
 
+
+
 impl<'a, T> ConvertToValue<Vec<T>> for Result<ProduceIter<'a>> where T: ScraperMain {
 	fn convert_from(self, doc: &Document) -> Result<Vec<T>> {
-		let value = self?;
-		value.map(|n| T::scrape(doc, Some(n.as_node()?))).collect::<Result<Vec<_>>>()
+		self?.map(|n| T::scrape(doc, Some(n.as_node()?))).collect::<Result<Vec<_>>>()
+	}
+}
+
+impl<'a, T> ConvertToValue<Option<T>> for Result<ProduceIter<'a>> where T: ScraperMain {
+	fn convert_from(self, doc: &Document) -> Result<Option<T>> {
+		self?.next().map(|n| T::scrape(doc, Some(n.as_node()?))).transpose()
 	}
 }
 
