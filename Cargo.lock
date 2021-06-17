@@ -1340,9 +1340,9 @@ dependencies = [
 
 [[package]]
 name = "xpather"
-version = "0.3.0-beta.0"
+version = "0.3.0-beta.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "346e1b328a8c1a68dec704a7b0c2b82aed26d5427edfbfcd9c9946aed1e66e53"
+checksum = "a9b846a01ce82053ea35f80867423f1470928d693913065d5ac653e70cec728b"
 dependencies = [
  "html5ever",
  "markup5ever",
