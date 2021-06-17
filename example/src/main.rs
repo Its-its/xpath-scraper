@@ -67,7 +67,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let data = resp.text().await?;
 
 	// Parse request into a Document.
-	let document = xpather::parse_doc(&mut Cursor::new(data));
+	let document = xpather::parse_document(&mut Cursor::new(data))?;
 
 	// Scrape RedditList struct.
 	let list = RedditList::scrape(&document, None)?;

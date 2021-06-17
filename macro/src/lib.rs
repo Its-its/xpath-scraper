@@ -37,8 +37,8 @@ pub fn derive_scraper(input: TokenStream) -> TokenStream {
 	let name = input.ident;
 
 	TokenStream::from(quote! {
-		impl scraper_main::ScraperMain for #name {
-			fn scrape(doc: &scraper_main::Document, container: Option<scraper_main::Node>) -> scraper_main::Result<Self> {
+		impl ::scraper_main::ScraperMain for #name {
+			fn scrape(doc: &::scraper_main::Document, container: Option<&::scraper_main::Node>) -> ::scraper_main::Result<Self> {
 				Ok(#body)
 			}
 		}
@@ -121,11 +121,11 @@ impl Scrape {
 			let transform_ident = format_ident!("{}", transform_fn);
 
 			quote_spanned! {span=>
-				#transform_ident(scraper_main::evaluate(#xpath, doc, container.clone()).convert_from(doc)?)
+				#transform_ident(::scraper_main::evaluate(#xpath, doc, container).convert_from(doc)?)
 			}
 		} else {
 			quote_spanned! {span=>
-				scraper_main::evaluate(#xpath, doc, container.clone()).convert_from(doc)?
+				::scraper_main::evaluate(#xpath, doc, container).convert_from(doc)?
 			}
 		}
 	}
