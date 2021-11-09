@@ -66,6 +66,12 @@ impl<'a> ConvertToValue<String> for Result<ProduceIter<'a>> {
 
 impl<'a> ConvertToValue<Vec<String>> for Result<ProduceIter<'a>> {
 	fn convert_from(self, _: &Document) -> Result<Vec<String>> {
+		Ok(value_to_string_vec(self?).into_iter().filter_map(|v| v.ok()).collect())
+	}
+}
+
+impl<'a> ConvertToValue<Vec<Result<String>>> for Result<ProduceIter<'a>> {
+	fn convert_from(self, _: &Document) -> Result<Vec<Result<String>>> {
 		Ok(value_to_string_vec(self?))
 	}
 }
@@ -74,21 +80,21 @@ impl<'a> ConvertToValue<Vec<String>> for Result<ProduceIter<'a>> {
 
 impl<'a, T> ConvertToValue<Vec<T>> for Result<ProduceIter<'a>> where T: ScraperMain {
 	fn convert_from(self, doc: &Document) -> Result<Vec<T>> {
-		self?.map(|n| T::scrape(doc, Some(n.as_node()?))).collect::<Result<Vec<_>>>()
+		self?.map(|n| T::scrape(doc, Some(n?.as_node()?))).collect::<Result<Vec<_>>>()
 	}
 }
 
 impl<'a, T> ConvertToValue<Option<T>> for Result<ProduceIter<'a>> where T: ScraperMain {
 	fn convert_from(self, doc: &Document) -> Result<Option<T>> {
-		self?.next().map(|n| T::scrape(doc, Some(n.as_node()?))).transpose()
+		self?.next().map(|n| T::scrape(doc, Some(n?.as_node()?))).transpose()
 	}
 }
 
 /// Converts [Value] to an [Result]<[String]>.
-pub fn value_to_string(value: Value) -> Result<String> {
-	match value {
+pub fn value_to_string(value: xpather::Result<Value>) -> Result<String> {
+	match value? {
 		Value::Node(node) => {
-			value_to_string(node.value()?)
+			value_to_string(node.value())
 		}
 
 		Value::String(v) => Ok(v),
@@ -98,22 +104,6 @@ pub fn value_to_string(value: Value) -> Result<String> {
 }
 
 /// Converts [Value] to [Vec]<[String]>.
-pub fn value_to_string_vec(iter: ProduceIter) -> Vec<String> {
-	let mut captured = Vec::new();
-
-	for item in iter {
-		match item {
-			Value::Node(node) => {
-				if let Some(v) = node.value().ok().and_then(|v| value_to_string(v).ok()) {
-					captured.push(v);
-				}
-			}
-
-			Value::String(v) => captured.push(v),
-
-			_ => ()
-		}
-	}
-
-	captured
+pub fn value_to_string_vec(iter: ProduceIter) -> Vec<Result<String>> {
+	iter.map(value_to_string).collect()
 }
