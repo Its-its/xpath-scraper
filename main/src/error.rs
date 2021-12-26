@@ -17,7 +17,10 @@ pub enum Error {
 	Io(IoError),
 
 	#[error("Can't convert from Value")]
-	ConvertFromValue(Option<Value>)
+	ConvertFromValue(Option<Value>),
+
+	#[error("Field \"{0}\" Value Error {1}")]
+	FieldValueError(&'static str, Box<Error>)
 }
 
 impl From<XpathError> for Error {

@@ -14,7 +14,14 @@
 
 use proc_macro::TokenStream;
 use quote::__private::Span;
-use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, Meta, NestedMeta, spanned::Spanned};
+use symbol::Symbol;
+use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, Meta, NestedMeta, spanned::Spanned, Path};
+
+
+
+mod symbol;
+
+
 
 // https://doc.rust-lang.org/reference/procedural-macros.html
 
@@ -39,6 +46,15 @@ pub fn derive_scraper(input: TokenStream) -> TokenStream {
 	TokenStream::from(quote! {
 		impl ::scraper_main::ScraperMain for #name {
 			fn scrape(doc: &::scraper_main::Document, container: Option<&::scraper_main::Node>) -> ::scraper_main::Result<Self> {
+				fn wrap_values<T>(name: &'static str, value: ::scraper_main::Result<T>) -> ::scraper_main::Result<T> {
+					match value {
+						Ok(v) => Ok(v),
+						Err(v) => {
+							Err(::scraper_main::Error::FieldValueError(name, Box::new(v)))
+						}
+					}
+				}
+
 				Ok(#body)
 			}
 		}
@@ -60,11 +76,11 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 	match field_types {
 		Fields::Named(fields) => {
 			let recurse = fields.named.iter().map(|field| {
-				let name = &field.ident;
+				let name = field.ident.as_ref().unwrap();
 
 				let scrape = Scrape::new(field.span(), &field.attrs);
 
-				let eval = scrape.generate_evaluation();
+				let eval = scrape.generate_evaluation(name.to_string());
 
 				quote! {
 					#name: #eval
@@ -83,7 +99,11 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 
 		Fields::Unnamed(fields) => {
 			let recurse = fields.unnamed.iter()
-				.map(|field| Scrape::new(field.span(), &field.attrs).generate_evaluation())
+				.enumerate()
+				.map(|(index, field)|
+					Scrape::new(field.span(), &field.attrs)
+					.generate_evaluation(index.to_string())
+				)
 				.collect::<Vec<_>>();
 
 			quote! {
@@ -112,13 +132,13 @@ impl Scrape {
 	pub fn new(span: Span, attributes: &[Attribute]) -> Self {
 		Self {
 			span,
-			is_ignored: does_attribute_exist("ignore", attributes),
-			xpath: get_scrape_attr_value("xpath", attributes),
-			transform_fn: get_scrape_attr_value("transform", attributes)
+			is_ignored: does_attribute_exist(symbol::IGNORE, attributes),
+			xpath: get_scrape_attr_value(symbol::XPATH, attributes),
+			transform_fn: get_scrape_attr_value(symbol::TRANSFORM, attributes)
 		}
 	}
 
-	pub fn generate_evaluation(self) -> syn::__private::TokenStream2 {
+	pub fn generate_evaluation(self, field_name: String) -> syn::__private::TokenStream2 {
 		if self.is_ignored {
 			quote! {
 				Default::default()
@@ -131,11 +151,11 @@ impl Scrape {
 				let transform_ident = format_ident!("{}", transform_fn);
 
 				quote_spanned! {span=>
-					#transform_ident(::scraper_main::evaluate(#xpath, doc, container).convert_from(doc)?)
+					#transform_ident(wrap_values(#field_name, ::scraper_main::evaluate(#xpath, doc, container).convert_from(doc))?)
 				}
 			} else {
 				quote_spanned! {span=>
-					::scraper_main::evaluate(#xpath, doc, container).convert_from(doc)?
+					wrap_values(#field_name, ::scraper_main::evaluate(#xpath, doc, container).convert_from(doc))?
 				}
 			}
 		}
@@ -143,12 +163,12 @@ impl Scrape {
 }
 
 
-fn get_scrape_attr_value(name: &str, attributes: &[Attribute]) -> Option<String> {
+fn get_scrape_attr_value(attr_name: Symbol, attributes: &[Attribute]) -> Option<String> {
 	for attr in attributes {
-		if attr.path.get_ident()? == "scrape" {
+		if attr.path == symbol::BASE_SCRAPE {
 			let parsed = parse_attr(attr)?;
 
-			if parsed.0 == name {
+			if parsed.0 == attr_name {
 				return Some(parsed.1);
 			}
 		}
@@ -157,13 +177,13 @@ fn get_scrape_attr_value(name: &str, attributes: &[Attribute]) -> Option<String>
 	None
 }
 
-fn does_attribute_exist(name: &str, attributes: &[Attribute]) -> bool {
+fn does_attribute_exist(name: Symbol, attributes: &[Attribute]) -> bool {
 	for attr in attributes {
-		if attr.path.get_ident().map(|v| v == "scrape").unwrap_or_default() {
-			let parsed = parse_attr_name(attr);
-
-			if parsed.as_deref() == Some(name) {
-				return true;
+		if attr.path == symbol::BASE_SCRAPE {
+			if let Some(parsed) = parse_attr_name(attr) {
+				if parsed == name {
+					return true;
+				}
 			}
 		}
 	}
@@ -172,7 +192,7 @@ fn does_attribute_exist(name: &str, attributes: &[Attribute]) -> bool {
 }
 
 
-fn parse_attr(attr: &Attribute) -> Option<(String, String)> {
+fn parse_attr(attr: &Attribute) -> Option<(Path, String)> {
 	let stream = attr.parse_args::<ExprAssign>().ok()?;
 
 	let left = if let syn::Expr::Path(value) = *stream.left {
@@ -193,19 +213,19 @@ fn parse_attr(attr: &Attribute) -> Option<(String, String)> {
 		return None;
 	};
 
-	Some((left.path.get_ident()?.to_string(), right_value))
+	Some((left.path, right_value))
 }
 
-fn parse_attr_name(attr: &Attribute) -> Option<String> {
+fn parse_attr_name(attr: &Attribute) -> Option<Path> {
 	// TODO: Actually use parse_meta() for all attributes instead of just this one.
 
 	let parse = attr.parse_meta().expect("--------------------------------------------");
 
 	if let Meta::List(val) = parse {
-		let ret: Vec<NestedMeta> = val.nested.into_iter().collect();
+		let ret = val.nested.into_iter().next();
 
-		if let NestedMeta::Meta(Meta::Path(path)) = ret.first()? {
-			return Some(path.get_ident()?.to_string());
+		if let NestedMeta::Meta(Meta::Path(path)) = ret? {
+			return Some(path);
 		}
 	}
 
