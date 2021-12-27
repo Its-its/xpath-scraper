@@ -44,16 +44,16 @@ pub struct RedditListItem {
 	#[scrape(xpath = r#".//a[@data-click-id="timestamp"]/text()"#)]
 	pub timestamp: Option<String>,
 
-	// Thumbnail image. Not working currently. Seems to be a Document issue (?)
-	#[scrape(xpath = r#".//div[@data-click-id="background"]/div/div[1]/div/div/a/@href"#)]
+	// Thumbnail image
+	#[scrape(xpath = r#".//img[@alt="Post image"]/@src"#)]
 	pub thumb: Option<String>,
 
-	// Amount of comments.
+	// Amount of comments
 	#[scrape(xpath = r#".//a[@data-click-id="comments"]/span/text()"#)]
 	pub comment_count: Option<String>,
 
-	// Vote count.
-	#[scrape(xpath = r#"./div[1]/div/div/text()"#)]
+	// Vote count
+	#[scrape(xpath = r#"./div/div/div/text()"#)]
 	pub votes: Option<String>,
 
 	#[scrape(ignore)]
