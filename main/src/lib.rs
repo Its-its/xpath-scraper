@@ -43,7 +43,7 @@ pub fn evaluate<'a, S: Into<String>>(search: S, doc: &'a Document, container: Op
 	})
 }
 
-/// Allows for Conversion from [Option]<[Value]> into another.
+/// Allows for Conversion from [ProduceIter] into another.
 pub trait ConvertToValue<T>: Sized {
 	fn convert_from(self, doc: &Document) -> Result<T>;
 }

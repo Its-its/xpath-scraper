@@ -15,12 +15,9 @@
 use proc_macro::TokenStream;
 use quote::__private::Span;
 use symbol::Symbol;
-use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, Meta, NestedMeta, spanned::Spanned, Path};
-
-
+use syn::{Attribute, Data, DeriveInput, ExprAssign, Fields, Meta, NestedMeta, spanned::Spanned, Path, __private::TokenStream2, Result};
 
 mod symbol;
-
 
 
 // https://doc.rust-lang.org/reference/procedural-macros.html
@@ -61,7 +58,7 @@ pub fn derive_scraper(input: TokenStream) -> TokenStream {
 	})
 }
 
-fn define_body(data: &mut Data) -> syn::__private::TokenStream2 {
+fn define_body(data: &mut Data) -> TokenStream2 {
 	match data {
 		Data::Struct(s) => {
 			define_fields(&mut s.fields)
@@ -72,25 +69,23 @@ fn define_body(data: &mut Data) -> syn::__private::TokenStream2 {
 	}
 }
 
-fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
+fn define_fields(field_types: &mut Fields) -> TokenStream2 {
 	match field_types {
 		Fields::Named(fields) => {
 			let recurse = fields.named.iter().map(|field| {
 				let name = field.ident.as_ref().unwrap();
 
-				let scrape = Scrape::new(field.span(), &field.attrs);
+				let scrape = ScrapeField::new(field.span(), &field.attrs);
 
-				let eval = scrape.generate_evaluation(name.to_string());
+				let eval = scrape.generate_evaluation(name.to_string())
+					.unwrap_or_else(syn::Error::into_compile_error);
 
 				quote! {
 					#name: #eval
 				}
 			}).collect::<Vec<_>>();
 
-			// TODO: Remove allows
-
 			quote! {
-				#[allow(clippy::redundant_clone, clippy::default_trait_access)]
 				Self {
 					#(#recurse),*
 				}
@@ -101,13 +96,13 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 			let recurse = fields.unnamed.iter()
 				.enumerate()
 				.map(|(index, field)|
-					Scrape::new(field.span(), &field.attrs)
+					ScrapeField::new(field.span(), &field.attrs)
 					.generate_evaluation(index.to_string())
+					.unwrap_or_else(syn::Error::into_compile_error)
 				)
 				.collect::<Vec<_>>();
 
 			quote! {
-				#[allow(clippy::redundant_clone, clippy::default_trait_access)]
 				Self(
 					#(#recurse),*
 				)
@@ -119,44 +114,47 @@ fn define_fields(field_types: &mut Fields) -> syn::__private::TokenStream2 {
 }
 
 
-struct Scrape {
+struct ScrapeField {
 	span: Span,
 
-	is_ignored: bool,
+	is_default: bool,
 
 	xpath: Option<String>,
 	transform_fn: Option<String>
 }
 
-impl Scrape {
+impl ScrapeField {
 	pub fn new(span: Span, attributes: &[Attribute]) -> Self {
 		Self {
 			span,
-			is_ignored: does_attribute_exist(symbol::IGNORE, attributes),
+			is_default: does_attribute_exist(symbol::DEFAULT, attributes),
 			xpath: get_scrape_attr_value(symbol::XPATH, attributes),
 			transform_fn: get_scrape_attr_value(symbol::TRANSFORM, attributes)
 		}
 	}
 
-	pub fn generate_evaluation(self, field_name: String) -> syn::__private::TokenStream2 {
-		if self.is_ignored {
-			quote! {
+	pub fn generate_evaluation(self, field_name: String) -> Result<TokenStream2> {
+		if self.is_default {
+			Ok(quote! {
 				Default::default()
-			}
+			})
 		} else {
-			let xpath = self.xpath.expect("Expected #[scrape(xpath = \"\")] macro");
 			let span = self.span;
+
+			let Some(xpath) = self.xpath else {
+				return Err(syn::Error::new(span, "Expected #[scrape(TYPE_OF)] eg. xpath = \"\""));
+			};
 
 			if let Some(transform_fn) = self.transform_fn {
 				let transform_ident = format_ident!("{}", transform_fn);
-
-				quote_spanned! {span=>
+				// TODO: I don't even know if I'm using span correctly.
+				Ok(quote_spanned! {span=>
 					#transform_ident(wrap_values(#field_name, ::scraper_main::evaluate(#xpath, doc, container).convert_from(doc))?)
-				}
+				})
 			} else {
-				quote_spanned! {span=>
+				Ok(quote_spanned! {span=>
 					wrap_values(#field_name, ::scraper_main::evaluate(#xpath, doc, container).convert_from(doc))?
-				}
+				})
 			}
 		}
 	}

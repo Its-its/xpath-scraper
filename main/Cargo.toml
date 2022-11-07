@@ -5,7 +5,7 @@ authors = ["Timothy <2779546+Its-its@users.noreply.github.com>"]
 edition = "2018"
 license = "MIT"
 homepage = "https://github.com/Its-its/xpath-scraper"
-respository = "https://github.com/Its-its/xpath-scraper"
+repository = "https://github.com/Its-its/xpath-scraper"
 readme = "README.md"
 keywords = ["xpath"]
 description = "The core framework xpath parsing"
@@ -14,4 +14,4 @@ description = "The core framework xpath parsing"
 anyhow = "1.0"
 thiserror = "1.0"
 
-xpather = "0.3.0-beta.6"
+xpather = "0.3.0-beta.8"

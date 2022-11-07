@@ -41,6 +41,7 @@ pub struct RedditListItem {
 	pub title: Option<String>,
 
 	// When it was posted
+	// TODO: I believe html5ever isn't able to parse this part for some reason.
 	#[scrape(xpath = r#".//a[@data-click-id="timestamp"]/text()"#)]
 	pub timestamp: Option<String>,
 
@@ -56,7 +57,7 @@ pub struct RedditListItem {
 	#[scrape(xpath = r#"./div/div/div/text()"#)]
 	pub votes: Option<String>,
 
-	#[scrape(ignore)]
+	#[scrape(default)]
 	pub this_doesnt_do_anything: Option<String>
 }
 

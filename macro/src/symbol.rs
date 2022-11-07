@@ -5,7 +5,7 @@ use syn::{Ident, Path};
 pub const BASE_SCRAPE: Symbol = Symbol("scrape");
 
 
-pub const IGNORE: Symbol = Symbol("ignore");
+pub const DEFAULT: Symbol = Symbol("default");
 pub const XPATH: Symbol = Symbol("xpath");
 pub const TRANSFORM: Symbol = Symbol("transform");
 
