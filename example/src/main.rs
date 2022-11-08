@@ -5,11 +5,11 @@
 
 use std::io::Cursor;
 
-use scraper_macros::Scraper;
 use scraper_main::{
 	xpather,
 	ConvertToValue,
-	ScraperMain
+	ScraperMain,
+	Scraper,
 };
 
 // Structure which is used to be able to scrape data from reddit.

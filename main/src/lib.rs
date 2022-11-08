@@ -10,6 +10,8 @@ pub use xpather::{
 	Value
 };
 
+pub use scraper_macros::Scraper;
+
 /// Used to scrape data for a struct.
 ///
 /// An example of this would look like with macros:

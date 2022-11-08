@@ -6,11 +6,11 @@ A Very simple example of this which is below and also in the [example](/example)
 ```rust
 use std::io::Cursor;
 
-use scraper_macros::Scraper;
 use scraper_main::{
 	xpather,
 	ConvertFromValue,
-	ScraperMain
+	ScraperMain,
+	Scraper,
 };
 
 #[derive(Debug, Scraper)]
