@@ -14,6 +14,6 @@ description = "The core framework xpath parsing"
 anyhow = "1.0"
 thiserror = "1.0"
 
-scraper-macros = { version = "*", path = "../macro" }
+scraper-macros = { version = "0.2.0", path = "../macro" }
 
 xpather = "0.3.0-beta.8"
