@@ -8,7 +8,7 @@ use std::io::Cursor;
 
 use scraper_main::{
 	xpather,
-	ConvertFromValue,
+	ConvertToValue,
 	ScraperMain,
 	Scraper
 };
@@ -31,17 +31,9 @@ pub struct RedditListItem {
 	#[scrape(xpath = r#".//a[@data-click-id="body"]/div/h3/text()"#)]
 	pub title: Option<String>,
 
-	// When it was posted
-	#[scrape(xpath = r#".//a[@data-click-id="timestamp"]/text()"#)]
-	pub timestamp: Option<String>,
-
 	// Amount of comments.
 	#[scrape(xpath = r#".//a[@data-click-id="comments"]/span/text()"#)]
 	pub comment_count: Option<String>,
-
-	// Vote count.
-	#[scrape(xpath = r#"./div[1]/div/div/text()"#)]
-	pub votes: Option<String>,
 }
 
 
@@ -49,10 +41,12 @@ pub struct RedditListItem {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	// Request subreddit
 	let resp = reqwest::get("https://www.reddit.com/r/nocontextpics/").await?;
+
+	// Return page data.
 	let data = resp.text().await?;
 
 	// Parse request into a Document.
-	let document = xpather::parse_doc(&mut Cursor::new(data));
+	let document = xpather::parse_document(&mut Cursor::new(data))?;
 
 	// Scrape RedditList struct.
 	let list = RedditList::scrape(&document, None)?;

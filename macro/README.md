@@ -1,4 +1,6 @@
-# XPATH Scraper
+# XPATH Scraper Macros
+
+The Macro used for the Scraper Main. You do not need to import this crate if using the main scraper.
 
 Makes it easier to scrape websites with XPATH. Currently using [my xpath parser](https://github.com/Its-its/rust-xpath) which is incomplete, undocumented and used originally for teaching myself about parsing.
 
