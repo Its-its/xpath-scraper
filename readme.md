@@ -1,5 +1,8 @@
 # XPATH Scraper
 
+[![Crates.io](https://img.shields.io/crates/v/scraper-main)](https://crates.io/crates/scraper-main)
+[![Documentation](https://docs.rs/scraper-main/badge.svg)](https://docs.rs/scraper-main)
+
 Makes it easier to scrape websites with XPATH. Currently using [my xpath parser](https://github.com/Its-its/rust-xpath) which is incomplete, undocumented and used originally for teaching myself about parsing.
 
 A Very simple example of this which is below and also in the [example](/example) folder:
